@@ -1,0 +1,38 @@
+{
+  "name": "whereof/think-scout",
+  "license": "MIT",
+  "type": "library",
+  "description": "Thinkphp Scout provides a driver based solution to searching your Eloquent models. Inspired By Laravel Scout.",
+  "keywords": [
+    "php",
+    "Thinkphp"
+  ],
+  "authors": [
+    {
+      "name": "whereof",
+      "email": "wangzhiqiang1224@gmail.com"
+    }
+  ],
+  "require": {
+    "php": ">7.1",
+    "ext-json": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "whereof\\think\\scout\\": "src"
+    }
+  },
+  "require-dev": {
+    "topthink/framework": "^6.0"
+  },
+  "extra": {
+    "think": {
+      "services": [
+        "whereof\\think\\scout\\Service"
+      ],
+      "config": {
+        "scout": "config/scout.php"
+      }
+    }
+  }
+}
