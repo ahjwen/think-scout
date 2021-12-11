@@ -17,6 +17,21 @@ use think\Model;
  */
 abstract class Engine
 {
+
+    /**
+     * @var array
+     */
+    protected $config;
+
+    /**
+     * Engine constructor.
+     * @param array $config
+     */
+    public function __construct($config = [])
+    {
+        $this->config = $config;
+    }
+
     /**
      * Update the given model in the index.
      * @param Collection $models
