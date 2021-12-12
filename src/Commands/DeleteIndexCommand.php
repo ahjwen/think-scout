@@ -7,6 +7,7 @@
 
 namespace whereof\think\scout\Commands;
 
+use Exception;
 use think\console\Input;
 use think\console\input\Argument;
 use think\console\Output;
@@ -32,7 +33,7 @@ class DeleteIndexCommand extends BaseCommand
             $name = trim($input->getArgument('name'));
             $this->engine()->deleteIndex($name);
             $output->info('Index ["' . $name . '"] deleted successfully.');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $output->error($e->getMessage());
         }
     }

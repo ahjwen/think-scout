@@ -9,6 +9,7 @@ namespace whereof\think\scout;
 
 use Closure;
 use think\Container;
+use think\model\Collection;
 use whereof\think\scout\Support\ModelHelp;
 
 /**
@@ -38,14 +39,6 @@ trait Searchable
             'callback'   => $callback,
             'softDelete' => static::usesSoftDelete() && config('scout.soft_delete', false),
         ]);
-    }
-
-    /**
-     * @return Engine
-     */
-    public function searchableUsing()
-    {
-        return app()->get(Engine::class)->engine();
     }
 
     /**
@@ -149,6 +142,62 @@ trait Searchable
     {
         $this->perPage = $perPage;
         return $this;
+    }
+
+    /**
+     * Remove all instances of the model from the search index.
+     *
+     * @return void
+     */
+    public static function removeAllFromSearch()
+    {
+        $self = new static;
+        $self->searchableUsing()->flush($self);
+    }
+
+    /**
+     * 全部数据 $query = $self->withTrashed();
+     *
+     * 只查询没有删除的数据 $query
+     *
+     * 查询删除的数据  $self->onlyTrashed()
+     *
+     * @param int|null $chunk
+     * @return void
+     */
+    public static function makeAllSearchable(int $chunk = null)
+    {
+        $self       = new static;
+        $softDelete = static::usesSoftDelete() && config('scout.soft_delete', false);
+        if (!$softDelete) {
+            $newQuery = $self->withTrashed();
+        } else {
+            $newQuery = $self->query();
+        }
+        $newQuery->when(true, function ($query) use (&$self) {
+            $self->makeAllSearchableUsing($query);
+        })->order($self->getPk());//->chunk($chunk, function (Collection $model) use (&$self) {
+//            $self->searchableUsing()->update($model);
+//        });
+    }
+
+
+    /**
+     * @param \think\db\Builder $query
+     * @return \think\db\Builder
+     */
+    protected function makeAllSearchableUsing($query)
+    {
+        return $query;
+    }
+
+
+    /**
+     * @return Engine
+     */
+    public function searchableUsing()
+    {
+        return app()->get(Engine::class)->engine();
     }
 
     /**

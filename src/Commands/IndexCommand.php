@@ -8,6 +8,7 @@
 namespace whereof\think\scout\Commands;
 
 
+use Exception;
 use think\console\Input;
 use think\console\input\Argument;
 use think\console\Output;
@@ -38,7 +39,7 @@ class IndexCommand extends BaseCommand
             }
             $this->engine()->createIndex($name, $options);
             $output->info('Index ["' . $name . '"] created successfully.');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $output->error($e->getMessage());
         }
     }
