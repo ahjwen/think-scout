@@ -267,15 +267,6 @@ class Builder
         return $this->engine()->get($this);
     }
 
-    /**
-     * Get the results of the search as a "lazy collection" instance.
-     *
-     * @return Collection
-     */
-    public function cursor()
-    {
-        return $this->engine()->cursor($this);
-    }
 
     /**
      * @param int|null $perPage

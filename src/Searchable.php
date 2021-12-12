@@ -11,14 +11,20 @@ use Closure;
 use think\Container;
 use whereof\think\scout\Support\ModelHelp;
 
+/**
+ * @author zhiqiang
+ * Trait Searchable
+ * @package whereof\think\scout
+ */
 trait Searchable
 {
-     /**
+    /**
      * The number of models to return for pagination.
      *
      * @var int
      */
     protected $perPage = 15;
+
     /**
      * @param string $query
      * @param Closure $callback
@@ -85,6 +91,25 @@ trait Searchable
     }
 
     /**
+     * Get the index name for the model.
+     *
+     * @return string
+     */
+    public function searchableAs()
+    {
+        return $this->getTable();
+    }
+
+    /**
+     * Get the indexable data array for the model.
+     * @return array
+     */
+    public function toSearchableArray()
+    {
+        return $this->toArray();
+    }
+
+    /**
      * Get the key name used to index the model.
      *
      * @return mixed
@@ -103,6 +128,7 @@ trait Searchable
     {
         return $this->getKey();
     }
+
     /**
      * Get the number of models to return per page.
      *
@@ -116,15 +142,15 @@ trait Searchable
     /**
      * Set the number of models to return per page.
      *
-     * @param  int  $perPage
+     * @param int $perPage
      * @return $this
      */
     public function setPerPage($perPage)
     {
         $this->perPage = $perPage;
-
         return $this;
     }
+
     /**
      * @return bool
      */

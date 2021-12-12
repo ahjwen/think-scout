@@ -9,6 +9,9 @@ namespace whereof\think\scout\Engines;
 
 use think\Collection;
 use think\db\BaseQuery;
+use think\db\exception\DataNotFoundException;
+use think\db\exception\DbException;
+use think\db\exception\ModelNotFoundException;
 use think\helper\Arr;
 use think\Model;
 use whereof\think\scout\Builder;
@@ -42,9 +45,9 @@ class CollectionEngine extends Engine
      * Perform the given search on the engine.
      * @param Builder $builder
      * @return array
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\DbException
-     * @throws \think\db\exception\ModelNotFoundException
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws ModelNotFoundException
      */
     public function search(Builder $builder)
     {
@@ -61,9 +64,9 @@ class CollectionEngine extends Engine
      * @param int $perPage
      * @param int $page
      * @return array
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\DbException
-     * @throws \think\db\exception\ModelNotFoundException
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws ModelNotFoundException
      */
     public function paginate(Builder $builder, int $perPage, int $page)
     {
@@ -156,10 +159,10 @@ class CollectionEngine extends Engine
 
     /**
      * @param Builder $builder
-     * @return \think\Collection
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\DbException
-     * @throws \think\db\exception\ModelNotFoundException
+     * @return Collection
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws ModelNotFoundException
      */
     protected function searchModels(Builder $builder)
     {
