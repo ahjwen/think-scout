@@ -166,9 +166,8 @@ class CollectionEngine extends Engine
      */
     protected function searchModels(Builder $builder)
     {
-        $model = $this->ensureSoftDeletesAreHandled($builder);
-
-        $model->when(!is_null($builder->callback), function (BaseQuery $query) use (&$builder) {
+        $query = $this->ensureSoftDeletesAreHandled($builder);
+        $model = $query->when(!is_null($builder->callback), function (BaseQuery $query) use (&$builder) {
             call_user_func($builder->callback, $query, $builder, $builder->query);
         })->when(!$builder->callback && count($builder->wheres) > 0, function (BaseQuery $query) use ($builder) {
             foreach ($builder->wheres as $key => $value) {
@@ -176,12 +175,12 @@ class CollectionEngine extends Engine
                     $query->where($key, $value);
                 }
             }
+            $query->where('id', '2');
         })->when(!$builder->callback && count($builder->whereIns) > 0, function (BaseQuery $query) use ($builder) {
             foreach ($builder->whereIns as $key => $values) {
                 $query->whereIn($key, $values);
             }
         })->order($builder->model->getPk(), 'desc');
-        //exit($query->buildSql());
         return $model->select()->filter(function (Model $model) use ($builder) {
             if (!$builder->model->shouldBeSearchable()) {
                 return false;
@@ -196,18 +195,18 @@ class CollectionEngine extends Engine
 
     /**
      * @param Builder $builder
-     * @return BaseQuery
+     * @return \think\db\Query | \think\db\BaseQuery
      */
     protected function ensureSoftDeletesAreHandled(Builder $builder)
     {
         if (Arr::get($builder->wheres, '__soft_deleted') === 0) {
-            return $builder->model->newQuery();
+            return $builder->model->withoutTrashed();
         } elseif (Arr::get($builder->wheres, '__soft_deleted') === 1) {
             return $builder->model->onlyTrashed();
         } elseif (ModelHelp::isSoftDelete($builder->model) && config('scout.soft_delete', false)) {
-            return $builder->model->newQuery();
+            return $builder->model->withTrashed();
         }
-        return $builder->model->newQuery();
+        return $builder->model->db();
     }
 
 }

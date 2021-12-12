@@ -9,7 +9,6 @@ namespace whereof\think\scout;
 
 use Closure;
 use think\Container;
-use think\model\Collection;
 use whereof\think\scout\Support\ModelHelp;
 
 /**
@@ -122,27 +121,6 @@ trait Searchable
         return $this->getKey();
     }
 
-    /**
-     * Get the number of models to return per page.
-     *
-     * @return int
-     */
-    public function getPerPage()
-    {
-        return $this->perPage;
-    }
-
-    /**
-     * Set the number of models to return per page.
-     *
-     * @param int $perPage
-     * @return $this
-     */
-    public function setPerPage($perPage)
-    {
-        $this->perPage = $perPage;
-        return $this;
-    }
 
     /**
      * Remove all instances of the model from the search index.
@@ -156,12 +134,6 @@ trait Searchable
     }
 
     /**
-     * 全部数据 $query = $self->withTrashed();
-     *
-     * 只查询没有删除的数据 $query
-     *
-     * 查询删除的数据  $self->onlyTrashed()
-     *
      * @param int|null $chunk
      * @return void
      */
@@ -191,6 +163,37 @@ trait Searchable
         return $query;
     }
 
+    /**
+     * Get the number of models to return per page.
+     *
+     * @return int
+     */
+    public function getPerPage()
+    {
+        return $this->perPage;
+    }
+
+    /**
+     * Set the number of models to return per page.
+     *
+     * @param int $perPage
+     * @return $this
+     */
+    public function setPerPage($perPage)
+    {
+        $this->perPage = $perPage;
+        return $this;
+    }
+
+
+    /**
+     * @return \think\db\Query
+     */
+    public function withoutTrashed()
+    {
+        $model = new static();
+        return $model->db();
+    }
 
     /**
      * @return Engine
