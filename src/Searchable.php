@@ -144,7 +144,7 @@ trait Searchable
         if (!$softDelete) {
             $newQuery = $self->withTrashed();
         } else {
-            $newQuery = $self->query();
+            $newQuery = $self->newQuery();
         }
         $newQuery->when(true, function ($query) use (&$self) {
             $self->makeAllSearchableUsing($query);
