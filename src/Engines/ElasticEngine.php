@@ -126,7 +126,10 @@ class ElasticEngine extends Engine
      */
     public function search(Builder $builder)
     {
-
+        return $this->performSearch($builder, array_filter([
+            'numericFilters' => $this->filters($builder),
+            'size'           => $builder->limit,
+        ]));
     }
 
     /**
@@ -138,7 +141,14 @@ class ElasticEngine extends Engine
      */
     public function paginate(Builder $builder, int $perPage, int $page)
     {
-        // TODO: Implement paginate() method.
+        $result = $this->performSearch($builder, [
+            'numericFilters' => $this->filters($builder),
+            'from'           => (($page * $perPage) - $perPage),
+            'size'           => $perPage,
+        ]);
+
+        $result['nbPages'] = $result['hits']['total'] / $perPage;
+        return $result;
     }
 
     /**
@@ -148,7 +158,7 @@ class ElasticEngine extends Engine
      */
     public function mapIds($results): Collection
     {
-        // TODO: Implement mapIds() method.
+        return collect(Arr::pluck($results['hits']['hits'], '_id'))->values();
     }
 
     /**
@@ -160,6 +170,19 @@ class ElasticEngine extends Engine
      */
     public function map(Builder $builder, $results, Model $model): Collection
     {
+        if ($results['hits']['total'] === 0) {
+            return collect($model);
+        }
+        $keys             = collect(Arr::pluck($results['hits']['hits'], '_id'))->values()->all();
+        $modelIdPositions = array_flip($keys);
+        return $model->getScoutModelsByIds(
+            $builder,
+            $keys
+        )->filter(function ($model) use ($keys) {
+            return in_array($model->getScoutKey(), $keys);
+        })->sortBy(function ($model) use ($modelIdPositions) {
+            return $modelIdPositions[$model->getScoutKey()];
+        })->values();
     }
 
     /**
@@ -169,7 +192,7 @@ class ElasticEngine extends Engine
      */
     public function getTotalCount($results): int
     {
-        // TODO: Implement getTotalCount() method.
+        return $results['hits']['total'];
     }
 
     /**
@@ -179,29 +202,108 @@ class ElasticEngine extends Engine
      */
     public function flush(Model $model): void
     {
-        // TODO: Implement flush() method.
+        $model->newQuery()
+            ->order($model->getPk())
+            ->unsearchable();
     }
 
     /**
      * Create a search index.
      * @param $name
      * @param array $options
-     * @return mixed
+     * @return void
      */
     public function createIndex($name, array $options = [])
     {
-        // TODO: Implement createIndex() method.
     }
 
     /**
      * Delete a search index.
      *
      * @param string $name
-     * @return mixed
+     * @return void
      */
     public function deleteIndex($name)
     {
         // TODO: Implement deleteIndex() method.
+    }
+
+    /**
+     * @param Builder $builder
+     * @param array $options
+     * @return array|mixed
+     */
+    protected function performSearch(Builder $builder, array $options = [])
+    {
+        $params = [
+            'index' => $this->buildElasticIndex($builder->model),
+            'type'  => get_class($builder->model),
+            'body'  => [
+                'query' => [
+                    'bool' => [
+                        'must' => [['query_string' => ['query' => "*{$builder->query}*"]]]
+                    ]
+                ]
+            ]
+        ];
+        if ($sort = $this->sort($builder)) {
+            $params['body']['sort'] = $sort;
+        }
+        if (isset($options['from'])) {
+            $params['body']['from'] = $options['from'];
+        }
+        if (isset($options['size'])) {
+            $params['body']['size'] = $options['size'];
+        }
+        if (isset($options['numericFilters']) && count($options['numericFilters'])) {
+            $params['body']['query']['bool']['must'] = array_merge(
+                $params['body']['query']['bool']['must'],
+                $options['numericFilters']
+            );
+        }
+        if ($builder->callback) {
+            return call_user_func(
+                $builder->callback,
+                $this->elastic,
+                $builder->query,
+                $params
+            );
+        }
+        return $this->elastic->search($params);
+    }
+
+    /**
+     * Generates the sort if theres any.
+     *
+     * @param Builder $builder
+     * @return array|null
+     */
+    protected function sort(Builder $builder)
+    {
+        if (count($builder->orders) == 0) {
+            return null;
+        }
+
+        return collect($builder->orders)->map(function ($order) {
+            return [$order['column'] => $order['direction']];
+        })->toArray();
+    }
+
+    /**
+     * Get the filter array for the query.
+     *
+     * @param Builder $builder
+     * @return array
+     */
+    protected function filters(Builder $builder)
+    {
+        return collect($builder->wheres)->map(function ($value, $key) {
+            if (is_array($value)) {
+                return ['terms' => [$key => $value]];
+            }
+
+            return ['match_phrase' => [$key => $value]];
+        })->values()->all();
     }
 
     /**
