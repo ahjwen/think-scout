@@ -41,7 +41,7 @@ trait Searchable
     }
 
     /**
-     * @return Engine object
+     * @return Engine
      */
     public function searchableUsing()
     {
